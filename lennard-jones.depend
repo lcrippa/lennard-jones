@@ -1,0 +1,34 @@
+# depslib dependency file v1.0
+1430406678 source:/home/lorenzo/Copy/MasterBooks/sissa/simulations/lennard-jones/main.cpp
+	<iostream>
+	<iomanip>
+	<fstream>
+	<stdlib.h>
+	<armadillo>
+	<time.h>
+	"tools.h"
+	"pp.h"
+
+1430319732 /home/lorenzo/Copy/MasterBooks/sissa/simulations/lennard-jones/include/tools.h
+	<stdlib.h>
+	<armadillo>
+	<time.h>
+	"pp.h"
+
+1430250597 /home/lorenzo/Copy/MasterBooks/sissa/simulations/lennard-jones/include/pp.h
+	<stdlib.h>
+	<armadillo>
+	<time.h>
+
+1430406677 source:/home/lorenzo/Copy/MasterBooks/sissa/simulations/lennard-jones/src/pp.cpp
+	<stdlib.h>
+	<math.h>
+	<time.h>
+	"pp.h"
+
+1430321290 source:/home/lorenzo/Copy/MasterBooks/sissa/simulations/lennard-jones/src/tools.cpp
+	"tools.h"
+	<math.h>
+	<time.h>
+	"pp.h"
+
