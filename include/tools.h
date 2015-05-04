@@ -29,7 +29,7 @@ class Tools : public PP
     void pbcize(int q);
     double distance(mat v, int i, int j); /*applies pbc and calculates squared distance between two particles*/
     double energycounter(); /*calculates lennard-jones total energy*/
-    double pressurecounter(); /*calculates total pressure*/
-    param evolvevector (); /*evolves configuration, energy and pressure*/
+    double virialcounter(); /*calculates total virial*/
+    param evolvevector (); /*evolves configuration, energy and virial*/
 };
 #endif // TOOLS_H

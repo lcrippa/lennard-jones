@@ -18,7 +18,6 @@ struct param                        //a type consisting in three variables, whic
 {
 	double first;
 	double second;
-	double error;
 };
 
 class PP

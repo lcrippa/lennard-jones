@@ -25,87 +25,68 @@ int main(int argc, char *argv[])
     srand (time(NULL));
 
     N=100;
-    L=10;
     PASSI=10000;
     DELTA=0.5;
-    T=1.0;
-    BINS=PASSI/100;
+    T=1;
+    BINS=PASSI/50;
 
-	int a=0,i=0,j=0;
+    double rho,random,e,vir;
+	int i=0,j=0,shakedown=2000;
 
-	param deltas={0,0,0};
-	param energy={0,0,0};
-	param pressure={0,0,0};
+	param deltas={0,0};
+	param energy={0,0};
+	param virial={0,0};
 
-    Tools suzzu;
+    Tools stuff;
     PP postproc;
 
-    suzzu.current = zeros<mat>(N,3);
-    suzzu.evolved = zeros<mat>(N,3);
+    stuff.current = zeros<mat>(N,3);
+    stuff.evolved = zeros<mat>(N,3);
 	vec energyvector = zeros<vec>(PASSI);
-	vec pressurevector = zeros<vec>(PASSI);
+	vec virialvector = zeros<vec>(PASSI);
 
-	for(i=0;i<N;i++)
-	{
-        for(j=0;j<3;j++)
+    for(rho=0.001;rho<0.9;rho=rho+0.05)
+    {
+
+        L=pow(N/rho,0.333333);
+
+        do //initialize positions, repeat until initial randomization is not absurd
         {
-            suzzu.current(i,j)=((double) rand() / (RAND_MAX))*L-L/2;
+            for(i=0;i<N;i++)
+            {
+                for(j=0;j<3;j++)
+                {
+                    random=(double) rand() / RAND_MAX;
+                    stuff.current(i,j)=(random-0.5)*L;
+                }
+            }
+
+            e=stuff.energycounter();
+            vir=stuff.virialcounter();
+        }while(vir>10000000000);
+
+        for(i=0;i<shakedown;i++)
+        {
+            deltas=stuff.evolvevector();
+            e=e+deltas.first;
+            vir=vir+deltas.second;
         }
-	}
 
-	energyvector(0)=suzzu.energycounter();
-	pressurevector(0)=suzzu.pressurecounter();
+        energyvector(0)=e;
+        virialvector(0)=vir;
 
-    i=1;
-    do
-	{
-		deltas=suzzu.evolvevector();
+        for(i=1;i<PASSI;i++)
+        {
+            deltas=stuff.evolvevector();
+            energyvector(i)=energyvector(i-1)+deltas.first;
+            virialvector(i)=virialvector(i-1)+deltas.second;
 
-		if (deltas.error!=1)
-		{
-			energyvector(i)=energyvector(i-1)+deltas.first;
-			pressurevector(i)=pressurevector(i-1)+deltas.second;
-			i++;
-			a++;
-		}
-		else
-		{
-			energyvector(i)=energyvector(i-1);
-			pressurevector(i)=pressurevector(i-1);
-			i++;
-		}
+        }
 
-	}while (i<500); //shakedown, discard first elements which are not significant
+        energy=postproc.jackknife(energyvector);
+        virial=postproc.jackknife(virialvector);
 
-    energyvector(0)=energyvector(499);
-    pressurevector(0)=pressurevector(499);
-    i=1;
-	do
-	{
-		deltas=suzzu.evolvevector();
-
-		if (deltas.error!=1)
-		{
-			energyvector(i)=energyvector(i-1)+deltas.first;
-			pressurevector(i)=pressurevector(i-1)+deltas.second;
-			i++;
-			a++;
-		}
-		else
-		{
-			energyvector(i)=energyvector(i-1);
-			pressurevector(i)=pressurevector(i-1);
-			i++;
-		}
-
-	}while (i<PASSI);
-
-	energy=postproc.jackknife(energyvector);
-	pressure=postproc.jackknife(pressurevector);
-    //cout<<energyvector<<endl;
-    cerr<<"#! rate of acceptance is "<<(double)a/i<<endl;
-    cerr<<"#! energy is "<<energy.first<<" with error "<<fabs(energy.second/energy.first)*100<<"%"<<endl;
-	cerr<<"#! pressure is "<<(pressure.first+N*T)/(L*L*L)<<" with error "<<fabs(pressure.second/pressure.first)*100<<"%"<<endl;
-
+        cout<<rho<<"    "<<rho*T+virial.first/(L*L*L)<<"    "<<virial.second/(L*L*L)<<endl;
+    }
     return 0;
 }

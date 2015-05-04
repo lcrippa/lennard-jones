@@ -3,7 +3,7 @@
 #include <time.h>
 #include "pp.h"
 
-void Tools::pbcize(int q)
+void Tools::pbcize(int q) //applies pbc (only on one particle because I evolve only one each time)
 {
     int j;
     double hL=L*0.5;
@@ -21,7 +21,7 @@ void Tools::pbcize(int q)
     }
 }
 
-double Tools::distance(mat v, int i, int j)
+double Tools::distance(mat v, int i, int j) //returns squared distance
 {
 	double dx,dy,dz,hL,dist=0;
 	hL=L*0.5;
@@ -30,12 +30,12 @@ double Tools::distance(mat v, int i, int j)
 	dy  = v(i,1)-v(j,1);
 	dz  = v(i,2)-v(j,2);
 
-	if (dx>hL)       dx=dx-L;
-	else if (dx<-hL) dx=dx+L;
-	if (dy>hL)       dx=dx-L;
-	else if (dy<-hL) dx=dx+L;
-	if (dz>hL)       dx=dx-L;
-	else if (dz<-hL) dx=dx+L;
+	if (dx>hL)       {dx=dx-L;}
+	else if (dx<-hL) {dx=dx+L;}
+	if (dy>hL)       {dy=dy-L;}
+	else if (dy<-hL) {dy=dy+L;}
+	if (dz>hL)       {dz=dz-L;}
+	else if (dz<-hL) {dz=dz+L;}
 
 	dist = dx*dx + dy*dy + dz*dz;
 
@@ -51,14 +51,14 @@ double Tools::energycounter()
 	{
 		for(j=0;j<i;j++)
 		{
-            dist=distance(current,i,j);
-            U=U+4.0*(pow(dist,-6)-pow(dist,-3));
+            dist=pow(distance(current,i,j),-3);
+            U=U+4.0*dist*(dist-1.0);
 		}
 	}
 	return U;
 }
 
-double Tools::pressurecounter()
+double Tools::virialcounter()
 {
 	int i,j;
 	double p=0,dist;
@@ -67,8 +67,8 @@ double Tools::pressurecounter()
 	{
 		for(j=0;j<i;j++)
 		{
-			dist=distance(current,i,j);
-			p=p+(4.0/3.0)*(12.0*pow(dist,-6)-6.0*pow(dist,-3));
+			dist=pow(distance(current,i,j),-3);
+			p=p+16.0*dist*dist-8.0*dist;
 		}
 	}
 	return p;
@@ -76,9 +76,9 @@ double Tools::pressurecounter()
 
 param Tools::evolvevector()
 {
-	int j,z;
+	int i,j,z;
 	double random,dold,dnew;
-	param deltas={0,0,0};
+	param deltas={0,0};
 
 	z=rand() % N;
 	evolved=current;
@@ -98,9 +98,9 @@ param Tools::evolvevector()
     {
         if (j!=z)
         {
-            dold=distance(current,z,j);
-            dnew=distance(evolved,z,j);
-            deltas.first=deltas.first+4.0*(pow(dnew,-6)-pow(dnew,-3))-4.0*(pow(dold,-6)-pow(dold,-3));
+            dold=pow(distance(current,z,j),-3);
+            dnew=pow(distance(evolved,z,j),-3);
+            deltas.first=deltas.first+4.0*dnew*(dnew-1.0)-4.0*dold*(dold-1.0);
         }
     }
 	if(random<exp(-deltas.first/T))
@@ -109,17 +109,17 @@ param Tools::evolvevector()
 		{
 			if (j!=z)
 			{
-                dold=distance(current,z,j);
-                dnew=distance(evolved,z,j);
-				deltas.second+=(4.0/3.0)*(12.0/pow(dnew,6)-6.0/pow(dnew,3))-(4.0/3.0)*(12.0/pow(dold,6)-6.0/pow(dold,3));
+                dold=pow(distance(current,z,j),-3);
+                dnew=pow(distance(evolved,z,j),-3);
+				deltas.second=deltas.second+16.0*(dnew*dnew-dold*dold)-8.0*(dnew-dold);
 			}
 		}
 		current=evolved;
-		deltas.error=0;
 	}
 	else
 	{
-		deltas.error=1;
+		deltas.first=0.0;
+		deltas.second=0.0;
 	}
     return deltas;
 }
