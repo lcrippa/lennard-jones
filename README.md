@@ -1,2 +1,2 @@
 # lennard-jones
-lennard-jones program.
+lennard-jones program
